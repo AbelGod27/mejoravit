@@ -1,0 +1,377 @@
+/* ================================================================
+   Estilos personalizados — Landing Page Mejoravit
+   Paleta: Rojo institucional #C8102E, Blanco #FFFFFF, Gris #F5F5F5
+   ================================================================ */
+
+/* ---- Variables de color ---- */
+:root {
+  --rojo:        #C8102E;
+  --rojo-oscuro: #A00D24;
+  --gris-claro:  #F5F5F5;
+  --gris-medio:  #6C757D;
+  --texto:       #212529;
+  --blanco:      #FFFFFF;
+}
+
+/* ---- Reset y base ---- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--texto);
+  background-color: var(--blanco);
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---- Navbar ---- */
+.navbar-brand span {
+  color: var(--rojo);
+  font-weight: 700;
+}
+
+.navbar {
+  border-bottom: 3px solid var(--rojo);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* ---- Hero Section ---- */
+#hero {
+  background: linear-gradient(135deg, var(--rojo) 0%, var(--rojo-oscuro) 100%);
+  color: var(--blanco);
+  padding: 80px 0 60px;
+  position: relative;
+  overflow: hidden;
+}
+
+#hero::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 50px;
+  background: var(--blanco);
+  clip-path: ellipse(55% 100% at 50% 100%);
+}
+
+#hero .badge-subtitulo {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: var(--blanco);
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  padding: 6px 14px;
+  border-radius: 50px;
+  display: inline-block;
+  margin-bottom: 16px;
+}
+
+#hero h1 {
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+
+#hero .lead-text {
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  opacity: 0.92;
+  max-width: 540px;
+  margin: 0 auto 32px;
+}
+
+.btn-hero {
+  background-color: var(--blanco);
+  color: var(--rojo);
+  font-weight: 700;
+  font-size: 1.05rem;
+  padding: 14px 36px;
+  border-radius: 50px;
+  border: none;
+  text-decoration: none;
+  display: inline-block;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.btn-hero:hover,
+.btn-hero:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  color: var(--rojo-oscuro);
+}
+
+/* ---- Seccion Servicios ---- */
+#servicios {
+  background-color: var(--blanco);
+  padding: 70px 0;
+}
+
+#servicios h2 {
+  color: var(--texto);
+  font-weight: 700;
+}
+
+#servicios h2 span {
+  color: var(--rojo);
+}
+
+.card-servicio {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  height: 100%;
+}
+
+.card-servicio:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.12);
+}
+
+.card-servicio .card-header {
+  background-color: var(--rojo);
+  color: var(--blanco);
+  border-radius: 16px 16px 0 0;
+  padding: 20px 24px;
+}
+
+.card-servicio .card-header h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.card-servicio .card-header .tipo-tag {
+  font-size: 0.78rem;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 3px 10px;
+  border-radius: 50px;
+  display: inline-block;
+  margin-top: 6px;
+}
+
+.card-servicio .card-body {
+  padding: 24px;
+}
+
+.card-servicio ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.card-servicio ul li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--gris-claro);
+  font-size: 0.95rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.card-servicio ul li:last-child {
+  border-bottom: none;
+}
+
+.check-icon {
+  color: var(--rojo);
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ---- Seccion Ventajas ---- */
+#ventajas {
+  background-color: var(--gris-claro);
+  padding: 70px 0;
+}
+
+#ventajas h2 {
+  font-weight: 700;
+}
+
+#ventajas h2 span {
+  color: var(--rojo);
+}
+
+.ventaja-item {
+  background-color: var(--blanco);
+  border-radius: 14px;
+  padding: 28px 24px;
+  height: 100%;
+  border-top: 4px solid var(--rojo);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease;
+}
+
+.ventaja-item:hover {
+  transform: translateY(-3px);
+}
+
+.ventaja-icono {
+  font-size: 1.8rem;
+  color: var(--rojo);
+  margin-bottom: 14px;
+  display: block;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.ventaja-item h4 {
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}
+
+.ventaja-item p {
+  font-size: 0.9rem;
+  color: var(--gris-medio);
+  margin: 0;
+}
+
+/* ---- Seccion Formulario ---- */
+#contacto {
+  background-color: var(--blanco);
+  padding: 70px 0;
+}
+
+#contacto h2 {
+  font-weight: 700;
+}
+
+#contacto h2 span {
+  color: var(--rojo);
+}
+
+.form-card {
+  background-color: var(--blanco);
+  border-radius: 16px;
+  box-shadow: 0 6px 32px rgba(0, 0, 0, 0.1);
+  padding: 40px 36px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.form-card .form-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--texto);
+}
+
+.form-card .form-control,
+.form-card .form-select {
+  border: 1.5px solid #dee2e6;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-card .form-control:focus,
+.form-card .form-select:focus {
+  border-color: var(--rojo);
+  box-shadow: 0 0 0 0.2rem rgba(200, 16, 46, 0.18);
+  outline: none;
+}
+
+.btn-submit {
+  background-color: var(--rojo);
+  color: var(--blanco);
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 14px 0;
+  border-radius: 50px;
+  border: none;
+  width: 100%;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  letter-spacing: 0.03em;
+}
+
+.btn-submit:hover,
+.btn-submit:focus {
+  background-color: var(--rojo-oscuro);
+  transform: translateY(-1px);
+}
+
+.btn-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ---- Mensaje de exito / error ---- */
+#form-mensaje {
+  display: none;
+  border-radius: 10px;
+  padding: 16px 20px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-top: 20px;
+}
+
+#form-mensaje.exito {
+  display: block;
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+#form-mensaje.error {
+  display: block;
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* ---- Footer ---- */
+footer {
+  background-color: var(--texto);
+  color: rgba(255, 255, 255, 0.75);
+  padding: 28px 0;
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+footer span {
+  color: var(--rojo);
+}
+
+/* ---- Utilidades ---- */
+.seccion-titulo {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.seccion-titulo p {
+  color: var(--gris-medio);
+  font-size: 1rem;
+  max-width: 520px;
+  margin: 8px auto 0;
+}
+
+.divider-rojo {
+  width: 50px;
+  height: 4px;
+  background-color: var(--rojo);
+  border-radius: 2px;
+  margin: 12px auto 0;
+}
+
+/* ---- Responsive ajustes ---- */
+@media (max-width: 576px) {
+  #hero {
+    padding: 60px 0 50px;
+    text-align: center;
+  }
+
+  .form-card {
+    padding: 28px 20px;
+  }
+}
