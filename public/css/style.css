@@ -375,3 +375,13 @@ footer span {
     padding: 28px 20px;
   }
 }
+
+/* Campo trampa anti-bots: fuera de la vista, pero no display:none
+   para que los bots lo sigan detectando como campo normal */
+.campo-trampa {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}

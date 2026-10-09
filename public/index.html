@@ -266,6 +266,21 @@
             <div class="invalid-feedback">Selecciona el tipo de crédito.</div>
           </div>
 
+          <!-- Campo trampa para bots: oculto para las personas -->
+          <div class="campo-trampa" aria-hidden="true">
+            <label for="sitio_web">No llenes este campo</label>
+            <input type="text" id="sitio_web" name="sitio_web" tabindex="-1" autocomplete="off" />
+          </div>
+
+          <!-- Aceptación del aviso de privacidad -->
+          <div class="form-check mb-4">
+            <input class="form-check-input" type="checkbox" id="acepta_privacidad" name="acepta_privacidad" required />
+            <label class="form-check-label" for="acepta_privacidad" style="font-size:.88rem;">
+              He leído y acepto el <a href="aviso-privacidad.html" target="_blank" rel="noopener">aviso de privacidad</a>.
+            </label>
+            <div class="invalid-feedback">Debes aceptar el aviso de privacidad para continuar.</div>
+          </div>
+
           <button type="submit" id="btn-submit" class="btn-submit">
             Precalifícate gratis
           </button>
@@ -274,7 +289,8 @@
           <div id="form-mensaje" aria-live="polite"></div>
 
           <p class="text-center mt-3 mb-0" style="font-size:.8rem; color:#6c757d;">
-            Tus datos están protegidos. No compartimos tu información con terceros.
+            Usamos tus datos solo para contactarte sobre tu crédito. Consulta nuestro
+            <a href="aviso-privacidad.html" target="_blank" rel="noopener">aviso de privacidad</a>.
           </p>
 
         </form>
@@ -294,6 +310,9 @@
       </p>
       <p class="mb-0" style="font-size:.8rem;">
         Este sitio no es un portal oficial de Infonavit. Somos asesores independientes certificados.
+      </p>
+      <p class="mb-0 mt-2" style="font-size:.8rem;">
+        <a href="aviso-privacidad.html" class="text-reset">Aviso de privacidad</a>
       </p>
     </div>
   </footer>

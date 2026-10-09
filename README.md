@@ -16,6 +16,7 @@ mejoravit/
 │   │   └── style.css       Estilos personalizados (rojo, blanco, gris)
 │   ├── js/
 │   │   └── script.js       Logica del formulario (Fetch API)
+│   ├── aviso-privacidad.html  Aviso de privacidad (completar datos en [CORCHETES])
 │   └── index.html          Landing page completa
 ├── .env.example            Plantilla de variables de entorno
 ├── .gitignore              Archivos ignorados por Git
@@ -114,6 +115,12 @@ DB_PASSWORD=tu_password_de_postgres
 
 Reemplaza `tu_password_de_postgres` con la contrasena que usas para conectarte a PostgreSQL.
 
+Variables adicionales (ver `.env.example` para el detalle):
+
+- `ADMIN_TOKEN`: clave para consultar la lista de leads. Sin ella, `GET /api/leads` queda desactivada.
+- `SMTP_*` y `NOTIFY_EMAIL`: si las configuras, recibes un correo con cada lead nuevo.
+- `TRUST_PROXY`: ponla en `1` si publicas el sitio detras de un proxy (Render, Railway, nginx).
+
 ---
 
 ## Paso 3 — Instalar dependencias de Node.js
@@ -124,7 +131,7 @@ Desde la raiz del proyecto en PowerShell:
 npm install
 ```
 
-Esto descargara los paquetes: `express`, `pg`, `dotenv`, `cors` y `nodemon`.
+Esto descargara los paquetes: `express`, `pg`, `dotenv`, `express-rate-limit`, `nodemailer` y `nodemon`.
 
 ---
 
@@ -166,22 +173,18 @@ Registra un nuevo lead en la base de datos.
 {
   "nombre":       "Maria Lopez",
   "telefono":     "5512345678",
-  "tipo_credito": "Repara"
+  "tipo_credito": "Repara",
+  "acepta_privacidad": true
 }
 ```
+
+Limite: 5 envios por IP cada 15 minutos (despues responde 429).
 
 **Respuesta exitosa (201):**
 ```json
 {
   "ok": true,
-  "mensaje": "Tu solicitud fue registrada. Te contactaremos pronto.",
-  "lead": {
-    "id": 1,
-    "nombre": "Maria Lopez",
-    "telefono": "5512345678",
-    "tipo_credito": "Repara",
-    "fecha_registro": "2024-01-15T10:30:00.000Z"
-  }
+  "mensaje": "Tu solicitud fue registrada. Te contactaremos pronto."
 }
 ```
 
@@ -196,11 +199,11 @@ Registra un nuevo lead en la base de datos.
 ---
 
 ### GET /api/leads
-Lista todos los leads registrados (uso interno / administracion).
+Lista todos los leads registrados. Requiere el `ADMIN_TOKEN` de tu `.env`.
 
 ```powershell
 # Desde PowerShell
-Invoke-RestMethod -Uri http://localhost:3000/api/leads
+Invoke-RestMethod -Uri http://localhost:3000/api/leads -Headers @{ Authorization = "Bearer TU_ADMIN_TOKEN" }
 ```
 
 ---
@@ -225,7 +228,7 @@ GROUP BY tipo_credito;
 
 ---
 
-## Sololucion de problemas frecuentes
+## Solucion de problemas frecuentes
 
 **Error: connect ECONNREFUSED 127.0.0.1:5432**
 PostgreSQL no esta corriendo. Abre el panel de servicios de Windows (services.msc)
@@ -253,4 +256,6 @@ y recarga el servidor.
 
 - El archivo `.env` contiene contrasenas. Nunca lo subas a Git.
 - El archivo `.gitignore` ya excluye `.env` y `node_modules/`.
-- Para produccion considera agregar rate-limiting, HTTPS y un proxy inverso (nginx).
+- El formulario ya tiene limite de envios por IP y un campo trampa contra bots.
+- `GET /api/leads` solo responde con el `ADMIN_TOKEN` correcto.
+- Para produccion usa HTTPS (la mayoria de los hostings lo incluyen).

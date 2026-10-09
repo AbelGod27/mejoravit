@@ -42,6 +42,8 @@ document.addEventListener('DOMContentLoaded', function () {
       nombre:       document.getElementById('nombre').value.trim(),
       telefono:     telefonoInput.value.trim(),
       tipo_credito: document.getElementById('tipo_credito').value,
+      acepta_privacidad: document.getElementById('acepta_privacidad').checked,
+      sitio_web:    document.getElementById('sitio_web').value,
     };
 
     try {

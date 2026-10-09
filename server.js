@@ -2,16 +2,24 @@
 
 require('dotenv').config();
 
-const express = require('express');
-const { Pool }  = require('pg');
-const cors      = require('cors');
-const path      = require('path');
+const express    = require('express');
+const { Pool }   = require('pg');
+const rateLimit  = require('express-rate-limit');
+const nodemailer = require('nodemailer');
+const crypto     = require('crypto');
+const path       = require('path');
 
 // ---------------------------------------------------------------
 // Configuracion de la aplicacion
 // ---------------------------------------------------------------
 const app  = express();
 const PORT = process.env.PORT || 3000;
+
+// Necesario si el sitio corre detras de un proxy (Render, Railway, nginx...)
+// para que el limite de envios use la IP real del visitante.
+if (process.env.TRUST_PROXY) {
+  app.set('trust proxy', parseInt(process.env.TRUST_PROXY, 10) || 1);
+}
 
 // ---------------------------------------------------------------
 // Conexión a PostgreSQL
@@ -35,14 +43,72 @@ pool.connect((err, client, release) => {
 });
 
 // ---------------------------------------------------------------
+// Aviso por correo de nuevos leads (opcional, se activa con SMTP_*)
+// ---------------------------------------------------------------
+const transporter = process.env.SMTP_HOST && process.env.NOTIFY_EMAIL
+  ? nodemailer.createTransport({
+      host:   process.env.SMTP_HOST,
+      port:   parseInt(process.env.SMTP_PORT || '465', 10),
+      secure: (process.env.SMTP_PORT || '465') === '465',
+      auth:   { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD },
+    })
+  : null;
+
+if (!transporter) {
+  console.warn('Aviso por correo desactivado: configura SMTP_HOST y NOTIFY_EMAIL en .env.');
+}
+
+function notificarLead(lead) {
+  if (!transporter) return;
+
+  transporter.sendMail({
+    from:    process.env.SMTP_FROM || process.env.SMTP_USER,
+    to:      process.env.NOTIFY_EMAIL,
+    subject: `Nuevo lead Mejoravit ${lead.tipo_credito}: ${lead.nombre}`,
+    text:
+      `Nombre: ${lead.nombre}\n` +
+      `Teléfono: ${lead.telefono}\n` +
+      `Tipo de crédito: ${lead.tipo_credito}\n` +
+      `Fecha: ${new Date(lead.fecha_registro).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })}`,
+  }).catch((error) => {
+    console.error('Error al enviar aviso por correo:', error.message);
+  });
+}
+
+// ---------------------------------------------------------------
 // Middlewares
 // ---------------------------------------------------------------
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 // Servir archivos estaticos desde /public
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Maximo 5 envios del formulario por IP cada 15 minutos
+const limiteLeads = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { ok: false, errores: ['Demasiados intentos. Espera unos minutos e inténtalo de nuevo.'] },
+});
+
+// Protege rutas internas con el token ADMIN_TOKEN (cabecera Authorization: Bearer <token>)
+function requiereAdmin(req, res, next) {
+  const token = process.env.ADMIN_TOKEN;
+  if (!token) {
+    return res.status(404).json({ ok: false, errores: ['Ruta no encontrada.'] });
+  }
+
+  const recibido = (req.get('authorization') || '').replace(/^Bearer\s+/i, '');
+  const a = crypto.createHash('sha256').update(recibido).digest();
+  const b = crypto.createHash('sha256').update(token).digest();
+  if (!crypto.timingSafeEqual(a, b)) {
+    return res.status(401).json({ ok: false, errores: ['No autorizado.'] });
+  }
+
+  next();
+}
 
 // ---------------------------------------------------------------
 // Validaciones
@@ -52,17 +118,23 @@ const TIPOS_VALIDOS = ['Repara', 'Renueva'];
 function validarLead(body) {
   const errores = [];
 
-  if (!body.nombre || typeof body.nombre !== 'string' || body.nombre.trim().length < 2) {
-    errores.push('El nombre debe tener al menos 2 caracteres.');
+  const nombre = typeof body.nombre === 'string' ? body.nombre.trim() : '';
+  if (nombre.length < 2 || nombre.length > 150) {
+    errores.push('El nombre debe tener entre 2 y 150 caracteres.');
   }
 
-  const telefonoLimpio = (body.telefono || '').replace(/\D/g, '');
-  if (telefonoLimpio.length < 10 || telefonoLimpio.length > 15) {
+  const telefono = typeof body.telefono === 'string' ? body.telefono.trim() : '';
+  const telefonoLimpio = telefono.replace(/\D/g, '');
+  if (telefonoLimpio.length < 10 || telefonoLimpio.length > 15 || telefono.length > 20) {
     errores.push('El teléfono debe tener entre 10 y 15 dígitos.');
   }
 
   if (!TIPOS_VALIDOS.includes(body.tipo_credito)) {
     errores.push('El tipo de crédito debe ser "Repara" o "Renueva".');
+  }
+
+  if (body.acepta_privacidad !== true && body.acepta_privacidad !== 'on') {
+    errores.push('Debes aceptar el aviso de privacidad.');
   }
 
   return errores;
@@ -73,7 +145,13 @@ function validarLead(body) {
 // ---------------------------------------------------------------
 
 // POST /api/leads  — Guardar nuevo lead
-app.post('/api/leads', async (req, res) => {
+app.post('/api/leads', limiteLeads, async (req, res) => {
+  // Campo trampa: las personas no lo ven, los bots lo llenan.
+  // Se responde como si todo fuera bien para no darle pistas al bot.
+  if (req.body.sitio_web) {
+    return res.status(201).json({ ok: true, mensaje: 'Tu solicitud fue registrada. Te contactaremos pronto.' });
+  }
+
   const errores = validarLead(req.body);
 
   if (errores.length > 0) {
@@ -93,12 +171,12 @@ app.post('/api/leads', async (req, res) => {
     );
 
     const lead = resultado.rows[0];
-    console.log(`Nuevo lead registrado — id: ${lead.id}, nombre: ${lead.nombre}, tipo: ${lead.tipo_credito}`);
+    console.log(`Nuevo lead registrado — id: ${lead.id}, tipo: ${lead.tipo_credito}`);
+    notificarLead(lead);
 
     return res.status(201).json({
       ok: true,
       mensaje: 'Tu solicitud fue registrada. Te contactaremos pronto.',
-      lead,
     });
   } catch (error) {
     console.error('Error al guardar lead:', error.message);
@@ -109,8 +187,8 @@ app.post('/api/leads', async (req, res) => {
   }
 });
 
-// GET /api/leads  — Listar leads (uso interno / admin)
-app.get('/api/leads', async (req, res) => {
+// GET /api/leads  — Listar leads (solo administrador, requiere ADMIN_TOKEN)
+app.get('/api/leads', requiereAdmin, async (req, res) => {
   try {
     const resultado = await pool.query(
       'SELECT id, nombre, telefono, tipo_credito, fecha_registro FROM leads ORDER BY fecha_registro DESC'
@@ -122,9 +200,24 @@ app.get('/api/leads', async (req, res) => {
   }
 });
 
-// Cualquier otra ruta sirve el index.html (SPA fallback)
+// Rutas de API inexistentes devuelven 404 en JSON
+app.use('/api', (req, res) => {
+  res.status(404).json({ ok: false, errores: ['Ruta no encontrada.'] });
+});
+
+// Cualquier otra ruta sirve el index.html
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Errores no controlados (por ejemplo, JSON mal formado o demasiado grande)
+app.use((err, req, res, next) => {
+  const status = err.status || err.statusCode || 500;
+  if (status >= 500) console.error('Error no controlado:', err.message);
+  res.status(status).json({
+    ok: false,
+    errores: [status >= 500 ? 'Error interno del servidor.' : 'Solicitud no válida.'],
+  });
 });
 
 // ---------------------------------------------------------------
