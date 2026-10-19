@@ -41,7 +41,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const payload = {
       nombre:       document.getElementById('nombre').value.trim(),
       telefono:     telefonoInput.value.trim(),
-      tipo_credito: document.getElementById('tipo_credito').value,
       acepta_privacidad: document.getElementById('acepta_privacidad').checked,
       sitio_web:    document.getElementById('sitio_web').value,
     };
@@ -95,5 +94,44 @@ document.addEventListener('DOMContentLoaded', function () {
     mensaje.className   = '';
     mensaje.removeAttribute('role');
   }
+
+});
+
+// ----------------------------------------------------------------
+// Ventana del aviso de privacidad: carga el texto de
+// aviso-privacidad.html la primera vez que se abre
+// ----------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', function () {
+
+  const modal     = document.getElementById('modal-aviso');
+  const contenido = document.getElementById('modal-aviso-contenido');
+  let cargado     = false;
+
+  if (!modal) return;
+
+  modal.addEventListener('show.bs.modal', async function () {
+    if (cargado) return;
+
+    try {
+      const respuesta = await fetch('aviso-privacidad.html');
+      if (!respuesta.ok) throw new Error('HTTP ' + respuesta.status);
+
+      const pagina = new DOMParser().parseFromString(await respuesta.text(), 'text/html');
+      const main   = pagina.querySelector('main');
+
+      // El título ya está en la cabecera de la ventana y el enlace de regreso sobra
+      main.querySelector('h1')?.remove();
+      main.querySelector('a[href="/"]')?.closest('p')?.remove();
+
+      contenido.innerHTML = main.innerHTML;
+      contenido.classList.add('aviso-modal');
+      cargado = true;
+    } catch (err) {
+      console.error('Error al cargar el aviso de privacidad:', err);
+      contenido.innerHTML =
+        '<p class="mb-0">No se pudo cargar el aviso. ' +
+        '<a href="aviso-privacidad.html">Ábrelo aquí</a>.</p>';
+    }
+  });
 
 });

@@ -64,11 +64,10 @@ function notificarLead(lead) {
   transporter.sendMail({
     from:    process.env.SMTP_FROM || process.env.SMTP_USER,
     to:      process.env.NOTIFY_EMAIL,
-    subject: `Nuevo lead Mejoravit ${lead.tipo_credito}: ${lead.nombre}`,
+    subject: `Nuevo lead Mejoravit: ${lead.nombre}`,
     text:
       `Nombre: ${lead.nombre}\n` +
       `Teléfono: ${lead.telefono}\n` +
-      `Tipo de crédito: ${lead.tipo_credito}\n` +
       `Fecha: ${new Date(lead.fecha_registro).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })}`,
   }).catch((error) => {
     console.error('Error al enviar aviso por correo:', error.message);
@@ -113,8 +112,6 @@ function requiereAdmin(req, res, next) {
 // ---------------------------------------------------------------
 // Validaciones
 // ---------------------------------------------------------------
-const TIPOS_VALIDOS = ['Repara', 'Renueva'];
-
 function validarLead(body) {
   const errores = [];
 
@@ -127,10 +124,6 @@ function validarLead(body) {
   const telefonoLimpio = telefono.replace(/\D/g, '');
   if (telefonoLimpio.length < 10 || telefonoLimpio.length > 15 || telefono.length > 20) {
     errores.push('El teléfono debe tener entre 10 y 15 dígitos.');
-  }
-
-  if (!TIPOS_VALIDOS.includes(body.tipo_credito)) {
-    errores.push('El tipo de crédito debe ser "Repara" o "Renueva".');
   }
 
   if (body.acepta_privacidad !== true && body.acepta_privacidad !== 'on') {
@@ -160,18 +153,17 @@ app.post('/api/leads', limiteLeads, async (req, res) => {
 
   const nombre       = req.body.nombre.trim();
   const telefono     = req.body.telefono.trim();
-  const tipo_credito = req.body.tipo_credito;
 
   try {
     const resultado = await pool.query(
-      `INSERT INTO leads (nombre, telefono, tipo_credito)
-       VALUES ($1, $2, $3)
-       RETURNING id, nombre, telefono, tipo_credito, fecha_registro`,
-      [nombre, telefono, tipo_credito]
+      `INSERT INTO leads (nombre, telefono)
+       VALUES ($1, $2)
+       RETURNING id, nombre, telefono, fecha_registro`,
+      [nombre, telefono]
     );
 
     const lead = resultado.rows[0];
-    console.log(`Nuevo lead registrado — id: ${lead.id}, tipo: ${lead.tipo_credito}`);
+    console.log(`Nuevo lead registrado — id: ${lead.id}`);
     notificarLead(lead);
 
     return res.status(201).json({
@@ -191,7 +183,7 @@ app.post('/api/leads', limiteLeads, async (req, res) => {
 app.get('/api/leads', requiereAdmin, async (req, res) => {
   try {
     const resultado = await pool.query(
-      'SELECT id, nombre, telefono, tipo_credito, fecha_registro FROM leads ORDER BY fecha_registro DESC'
+      'SELECT id, nombre, telefono, fecha_registro FROM leads ORDER BY fecha_registro DESC'
     );
     return res.json({ ok: true, total: resultado.rowCount, leads: resultado.rows });
   } catch (error) {
@@ -200,9 +192,34 @@ app.get('/api/leads', requiereAdmin, async (req, res) => {
   }
 });
 
+// DELETE /api/leads/:id  — Borrar un lead (solo administrador)
+app.delete('/api/leads/:id', requiereAdmin, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!Number.isInteger(id) || id < 1) {
+    return res.status(400).json({ ok: false, errores: ['Id no válido.'] });
+  }
+
+  try {
+    const resultado = await pool.query('DELETE FROM leads WHERE id = $1', [id]);
+    if (resultado.rowCount === 0) {
+      return res.status(404).json({ ok: false, errores: ['El lead no existe.'] });
+    }
+    console.log(`Lead borrado — id: ${id}`);
+    return res.json({ ok: true });
+  } catch (error) {
+    console.error('Error al borrar lead:', error.message);
+    return res.status(500).json({ ok: false, errores: ['Error interno del servidor.'] });
+  }
+});
+
 // Rutas de API inexistentes devuelven 404 en JSON
 app.use('/api', (req, res) => {
   res.status(404).json({ ok: false, errores: ['Ruta no encontrada.'] });
+});
+
+// Panel de administración
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
 // Cualquier otra ruta sirve el index.html

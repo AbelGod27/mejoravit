@@ -385,3 +385,78 @@ footer span {
   height: 1px;
   overflow: hidden;
 }
+
+/* Texto del aviso de privacidad dentro de la ventana emergente */
+.aviso-modal h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-top: 24px;
+}
+
+.aviso-modal p,
+.aviso-modal li {
+  line-height: 1.7;
+}
+
+/* ============================================================
+   REQUISITOS Y CÓMO FUNCIONA
+   ============================================================ */
+#requisitos {
+  background-color: var(--gris-claro);
+  padding: 70px 0;
+}
+
+#pasos {
+  background-color: var(--blanco);
+  padding: 70px 0;
+}
+
+#requisitos h2,
+#pasos h2 {
+  color: var(--texto);
+  font-weight: 700;
+}
+
+#requisitos h2 span,
+#pasos h2 span {
+  color: var(--rojo);
+}
+
+.lista-requisitos {
+  background-color: var(--blanco);
+  border-radius: 14px;
+  padding: 28px 24px;
+  border-top: 4px solid var(--rojo);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.lista-requisitos ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.lista-requisitos ul li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--gris-claro);
+  font-size: 0.95rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.lista-requisitos ul li:last-child {
+  border-bottom: none;
+}
+
+/* En "Cómo funciona" las tarjetas llevan borde gris para no perderse en el fondo blanco */
+#pasos .ventaja-item {
+  border: 1px solid #e9ecef;
+  border-top: 4px solid var(--rojo);
+}
+
+.paso-titulo {
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}

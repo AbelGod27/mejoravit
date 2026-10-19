@@ -15,8 +15,10 @@ mejoravit/
 │   ├── css/
 │   │   └── style.css       Estilos personalizados (rojo, blanco, gris)
 │   ├── js/
+│   │   ├── admin.js        Logica del panel de administracion
 │   │   └── script.js       Logica del formulario (Fetch API)
-│   ├── aviso-privacidad.html  Aviso de privacidad (completar datos en [CORCHETES])
+│   ├── admin.html          Panel de administracion de leads
+│   ├── aviso-privacidad.html  Aviso de privacidad
 │   └── index.html          Landing page completa
 ├── .env.example            Plantilla de variables de entorno
 ├── .gitignore              Archivos ignorados por Git
@@ -173,7 +175,6 @@ Registra un nuevo lead en la base de datos.
 {
   "nombre":       "Maria Lopez",
   "telefono":     "5512345678",
-  "tipo_credito": "Repara",
   "acepta_privacidad": true
 }
 ```
@@ -208,6 +209,19 @@ Invoke-RestMethod -Uri http://localhost:3000/api/leads -Headers @{ Authorization
 
 ---
 
+### DELETE /api/leads/:id
+Borra un lead. Requiere el `ADMIN_TOKEN`.
+
+---
+
+## Panel de administracion
+
+Abre **http://localhost:3000/admin** y escribe el `ADMIN_TOKEN` de tu `.env`.
+Desde ahi puedes ver los leads, buscarlos, escribirles por WhatsApp y borrarlos.
+Los registros con mas de 6 meses aparecen resaltados.
+
+---
+
 ## Consultar leads directamente en PostgreSQL
 
 ```sql
@@ -217,13 +231,14 @@ Invoke-RestMethod -Uri http://localhost:3000/api/leads -Headers @{ Authorization
 -- Ver todos los leads
 SELECT * FROM leads ORDER BY fecha_registro DESC;
 
--- Ver solo un tipo de credito
-SELECT * FROM leads WHERE tipo_credito = 'Repara';
+-- Ver los leads de los ultimos 7 dias
+SELECT * FROM leads WHERE fecha_registro > NOW() - INTERVAL '7 days';
 
--- Contar leads por tipo
-SELECT tipo_credito, COUNT(*) AS total
+-- Contar leads por dia
+SELECT fecha_registro::date AS dia, COUNT(*) AS total
 FROM leads
-GROUP BY tipo_credito;
+GROUP BY dia
+ORDER BY dia DESC;
 ```
 
 ---
